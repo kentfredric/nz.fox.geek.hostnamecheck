@@ -40,31 +40,29 @@ public final class HostNameCheckListener implements Listener {
 		return p.hasMetadata(HostNameCheckListener.metakey);
 	}
 
-	@EventHandler(priority=EventPriority.LOWEST) 
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onJoin(final PlayerJoinEvent event) {
 		// This, fetches the data obtained during login
 		// and dispatches it on join,
 		// so that hopefully, its visible to the user by then.
 		final Player p = event.getPlayer();
 		if (!hasHostInfo(p)) {
-			plugin.getLogger().info("No host info found");
 			return;
 		}
 
 		final HostNameInfo hi = getHostInfo(p);
 
 		if (hi.isBadHostName()) {
-			plugin.getLogger().info("Has a bad hostname");
-			final String h = hi.getHostDomainName();
 			p.sendMessage("Warning: The server address you have connected to ( "
-					+ h
-					+ " ) is not recommended, and maybe slower than necessary"
-			);
-			p.sendMessage("Please switch to one of: " + HostNameCheckListener.matcher.goodServers());
+					+ hi.getHostDomainName()
+					+ " ) is not recommended, and maybe slower than necessary");
+			p.sendMessage("Please switch to one of: "
+					+ HostNameCheckListener.matcher.goodServers());
 		}
 		if (hi.isByIP()) {
 			p.sendMessage("Warning: You are connecting to noirland by direct IP. Please don't.");
-			p.sendMessage("Please switch to one of: " + HostNameCheckListener.matcher.goodServers());
+			p.sendMessage("Please switch to one of: "
+					+ HostNameCheckListener.matcher.goodServers());
 		}
 	}
 
@@ -74,13 +72,16 @@ public final class HostNameCheckListener implements Listener {
 		// on the player pertaining to the details
 		// that transpired during login
 		// so that it can be used elsewhere
-		HostNameInfo info = HostNameCheckListener.matcher.match(event.getHostname());
-		if ( ! info.isGoodHostName() || info.isByIP() ) {
-			plugin.getLogger().info("weird login of player " + event.getPlayer().getName() + " via " + info.getHostDomainName());
+		final HostNameInfo info = HostNameCheckListener.matcher.match(event
+				.getHostname());
+		if (!info.isGoodHostName() || info.isByIP()) {
+			plugin.getLogger().info(
+					"weird login of player " + event.getPlayer().getName()
+							+ " via " + info.getHostDomainName());
 		}
-		
-		event.getPlayer().setMetadata(HostNameCheckListener.metakey, new FixedMetadataValue(
-				plugin, info));
-	
+
+		event.getPlayer().setMetadata(HostNameCheckListener.metakey,
+				new FixedMetadataValue(plugin, info));
+
 	}
 }
