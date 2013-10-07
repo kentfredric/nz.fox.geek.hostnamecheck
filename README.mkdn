@@ -1,0 +1,53 @@
+### Host Name Checker
+
+#### Version 0.1.0
+
+This is still a very limited plugin, that does only a few things,
+     and it is very Noirland specific
+
+#### Lists
+
+Basically, there are 4 types of connection addresses:
+
+  1. Ones we know of, work, and recommend
+  2. Ones we know of, work, but don't recommend
+  3. Ones we don't know of, which work, and would likely not recommend.
+  4. IP-only versions of the above.
+
+### For this plugin
+
+
+  1.  - `nz.noirland.co.nz` - For NZ Users
+      - `au.noirland.co.nz` - For Australian Users
+      - `us.noirland.co.nz` - For International users.
+
+  2.  - `www.noirland.co.nz` - An ugly quirk of how things exist, but effectively US
+      - `noirland.co.nz`     - ^^^ ^^^ ^^^ ^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  3. These will turn up if people are creating domain names for us without our knowledge
+      and pointing them at our IP addresses, or people are doing nasty shit with `/etc/hosts`.
+
+      Either way, we need to know people are doing this.
+
+  4. People from time to time do the silly thing of hard-coding the numeric IP address. 
+  
+    This is inherently fragile and threatens our support model.
+
+
+#### How it behaves
+
+  1. Nothing strange happens, login occurs as normal. 99% Of our users.
+
+  2. User gets a notice during login saying they probably should use a more appropriate
+      server address to get the best performance for where they are.
+
+      Admin console logs that a user came via this entry point.
+
+  3. User is *NOT* warned. Admin console logs the hostname the user arrived from.
+
+  4. User is informed that they are connecting via IP, and that it is not recommended,
+    Admin console logs that a user came via a direct IP.
+
+
+And in cases #2 and #4, user gets also told the list of servers that are deemed relevant.
+
