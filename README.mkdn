@@ -22,7 +22,7 @@ Basically, there are 4 types of connection addresses:
       - `us.noirland.co.nz` - For International users.
 
   2.  - `www.noirland.co.nz` - An ugly quirk of how things exist, but effectively US
-      - `noirland.co.nz`     - ^^^ ^^^ ^^^ ^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      - `noirland.co.nz    ` - ^
 
   3. These will turn up if people are creating domain names for us without our knowledge
       and pointing them at our IP addresses, or people are doing nasty shit with `/etc/hosts`.
