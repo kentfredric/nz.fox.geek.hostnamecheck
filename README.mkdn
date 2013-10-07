@@ -51,3 +51,32 @@ Basically, there are 4 types of connection addresses:
 
 And in cases #2 and #4, user gets also told the list of servers that are deemed relevant.
 
+
+### SO RECAP
+
+#### Average Users going via approved addresses
+
+This is a whitelist, containing `nz.noirland.co.nz`,`au.noirland.co.nz`,`us.noirland.co.nz`
+
+Login, nothing weird happens, nothing weird happens on the console.
+
+#### Users going via unrecommended addresses
+
+This is a blacklist, containing `noirland.co.nz` , `www.noirland.co.nz`
+
+Login, Warning given to user saying they should change, with a list of alternatives.
+
+Admin console reports user comming from a "bad" address.
+
+#### Users going via server names we've never heard of
+
+User doesn't notice we're doing anything weird.
+
+Admin console reports the weirdness.
+
+#### Users going via direct IPs
+
+User is told "thats a bad idea", with a list of alternatives.
+
+Admin console logs the IP the user came by.
+
