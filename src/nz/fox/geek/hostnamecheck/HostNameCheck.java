@@ -6,8 +6,8 @@ public final class HostNameCheck extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		final HostNameCheckListener l = new HostNameCheckListener(this);
-		getServer().getPluginManager().registerEvents(l, this);
+		final HostNameCheckListener l = new HostNameCheckListener( this );
+		getServer().getPluginManager().registerEvents( l, this );
 	}
 
 }

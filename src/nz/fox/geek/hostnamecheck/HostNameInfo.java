@@ -1,54 +1,94 @@
 package nz.fox.geek.hostnamecheck;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.plugin.Plugin;
+
+/**
+ * @author Kent Fredric
+ * 
+ */
 public class HostNameInfo {
 
-	private String hostName;
-	private boolean isBadHostName;
-	private boolean isByIP;
-	private boolean isGoodHostName;
+	private static final String			 metakey	 = "connected_server";
 
-	public HostNameInfo(final String hostName, final boolean isBadHostName,
-			final boolean isGoodHostName, final boolean isByIP) {
-		this.setHostName(hostName);
-		this.setBadHostName(isBadHostName);
-		this.setGoodHostName(isGoodHostName);
-		this.setByIP(isByIP);
+	private static final List<String> blacklist = Arrays.asList( "www.noirland.co.nz", "noirland.co.nz" );
+
+	private static final String			 ipRegexp	= "^\\d+[.]\\d+[.]\\d+[.]\\d+:\\d+$";
+
+	private static final List<String> whitelist = Arrays.asList( "nz.noirland.co.nz", "au.noirland.co.nz",
+																									"us.noirland.co.nz" );
+
+	public static boolean canExtractFromPlayer( final Player p, final Plugin plugin ) {
+		if ( !p.hasMetadata( HostNameInfo.metakey ) ) {
+			return false;
+		}
+		final List<MetadataValue> values = p.getMetadata( HostNameInfo.metakey );
+		for ( final MetadataValue value : values ) {
+			if ( value.getOwningPlugin().getDescription().getName().equals( plugin.getDescription().getName() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public String getHostDomainName() {
-		return this.getHostName().substring(0, this.getHostName().indexOf(":"));
+	public static HostNameInfo extractFromPlayer( final Player p, final Plugin plugin ) {
+		final List<MetadataValue> values = p.getMetadata( HostNameInfo.metakey );
+		for ( final MetadataValue value : values ) {
+			if ( value.getOwningPlugin().getDescription().getName().equals( plugin.getDescription().getName() ) ) {
+				return (HostNameInfo) value.value();
+			}
+		}
+		return new HostNameInfo( "" );
+	}
+
+	public static String getWhitelistString() {
+		return StringUtils.join( HostNameInfo.whitelist, ", " );
+	}
+
+	private final String hostName;
+
+	public HostNameInfo( final String hostName ) {
+		this.hostName = hostName;
+	}
+
+	public void attachToPlayer( final Player p, final Plugin plugin ) {
+		p.setMetadata( HostNameInfo.metakey, new FixedMetadataValue( plugin, this ) );
+	}
+
+	public String getDomainName() {
+		return this.getHostName().substring( 0, this.getHostName().indexOf( ":" ) );
 	}
 
 	public String getHostName() {
-		return hostName;
+		return this.hostName;
 	}
 
-	public boolean isBadHostName() {
-		return isBadHostName;
+	public boolean getIsBadHostName() {
+		for ( final String i : HostNameInfo.blacklist ) {
+			if ( this.getDomainName().contentEquals( i ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public boolean isByIP() {
-		return isByIP;
+	public boolean getIsGoodHostName() {
+		for ( final String i : HostNameInfo.whitelist ) {
+			if ( this.getDomainName().contentEquals( i ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public boolean isGoodHostName() {
-		return isGoodHostName;
-	}
-
-	public void setBadHostName(final boolean isBadHostName) {
-		this.isBadHostName = isBadHostName;
-	}
-
-	public void setByIP(final boolean isByIP) {
-		this.isByIP = isByIP;
-	}
-
-	public void setGoodHostName(final boolean isGoodHostName) {
-		this.isGoodHostName = isGoodHostName;
-	}
-
-	public void setHostName(final String hostName) {
-		this.hostName = hostName;
+	public boolean getIsIpAddress() {
+		return this.getHostName().matches( HostNameInfo.ipRegexp );
 	}
 
 }

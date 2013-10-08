@@ -1,87 +1,129 @@
 package nz.fox.geek.hostnamecheck;
 
-import java.util.List;
-
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 
 public final class HostNameCheckListener implements Listener {
 
-	private static final HostNameMatcher matcher = new HostNameMatcher();
+	/**
+	 * Tell {@code player} that their host in {@code hostinfo} is bad
+	 * 
+	 * @param player
+	 *          The player to message
+	 * @param hostinfo
+	 *          The players server info
+	 */
+	public static void tellPlayerBadHostName( final Player player, final HostNameInfo hostinfo ) {
+		player.sendMessage( "Warning: The server address you have connected to ( " + hostinfo.getDomainName()
+				+ " ) is not recommended, and maybe slower than necessary" );
+		HostNameCheckListener.tellPlayerPickHost( player );
+	}
 
-	private static final String metakey = "connected_server";
+	/**
+	 * Tell {@code player} that they are using a direct IP, and that this is bad
+	 * 
+	 * @param player
+	 *          The player to message
+	 * @param hostinfo
+	 *          The players server info
+	 */
+	public static void tellPlayerBadIP( final Player player, final HostNameInfo hostinfo ) {
+		player.sendMessage( "Warning: You are connecting to noirland by direct IP. Please don't." );
+		HostNameCheckListener.tellPlayerPickHost( player );
+	}
+
+	/**
+	 * Tell the {@code player} the list of recommended hosts
+	 * 
+	 * @param player
+	 *          The player to message
+	 */
+	public static void tellPlayerPickHost( final Player player ) {
+		player.sendMessage( "Please switch to one of: " + HostNameInfo.getWhitelistString() );
+	}
 
 	private final Plugin plugin;
 
-	public HostNameCheckListener(final Plugin plugin) {
+	/**
+	 * Create an instance of a HostNameCheck Listener, owned by {@code plugin}
+	 * 
+	 * @param plugin
+	 *          The plugin that owns this listener
+	 */
+	public HostNameCheckListener( final Plugin plugin ) {
 		this.plugin = plugin;
 	}
 
-	private HostNameInfo getHostInfo(final Player player) {
-		final List<MetadataValue> values = player
-				.getMetadata(HostNameCheckListener.metakey);
-		for (final MetadataValue value : values) {
-			if (value.getOwningPlugin().getDescription().getName()
-					.equals(plugin.getDescription().getName())) {
-				return (HostNameInfo) value.value();
-			}
-		}
-		return new HostNameInfo("", false, false, false);
-	}
-
-	private boolean hasHostInfo(final Player p) {
-		return p.hasMetadata(HostNameCheckListener.metakey);
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void onJoin(final PlayerJoinEvent event) {
+	/**
+	 * When Minecraft fires a "Join" event, start dispatching warnings to users.
+	 * 
+	 * @param event
+	 *          The Join event.
+	 */
+	@EventHandler( priority = EventPriority.LOWEST )
+	public void onJoin( final PlayerJoinEvent event ) {
 		// This, fetches the data obtained during login
 		// and dispatches it on join,
 		// so that hopefully, its visible to the user by then.
 		final Player p = event.getPlayer();
-		if (!hasHostInfo(p)) {
+
+		if ( !p.isOnline() ) {
+			// Can't tell player they dun goofed if they're not online
 			return;
 		}
 
-		final HostNameInfo hi = getHostInfo(p);
-
-		if (hi.isBadHostName()) {
-			p.sendMessage("Warning: The server address you have connected to ( "
-					+ hi.getHostDomainName()
-					+ " ) is not recommended, and maybe slower than necessary");
-			p.sendMessage("Please switch to one of: "
-					+ HostNameCheckListener.matcher.goodServers());
+		if ( !HostNameInfo.canExtractFromPlayer( p, this.plugin ) ) {
+			// This returning false --> something else died
+			return;
 		}
-		if (hi.isByIP()) {
-			p.sendMessage("Warning: You are connecting to noirland by direct IP. Please don't.");
-			p.sendMessage("Please switch to one of: "
-					+ HostNameCheckListener.matcher.goodServers());
+
+		final HostNameInfo hi = HostNameInfo.extractFromPlayer( p, this.plugin );
+
+		if ( hi.getIsBadHostName() ) {
+			HostNameCheckListener.tellPlayerBadHostName( p, hi );
+		}
+		if ( hi.getIsIpAddress() ) {
+			HostNameCheckListener.tellPlayerBadIP( p, hi );
+
 		}
 	}
 
+	/**
+	 * When a user logs on, record information about that users login details and
+	 * attach it to their metadata. Also, tell console about weird things.
+	 * 
+	 * @param event
+	 *          The Login event
+	 */
 	@EventHandler
-	public void onLogin(final PlayerLoginEvent event) {
+	public void onLogin( final PlayerLoginEvent event ) {
 		// This simply creates metadata
 		// on the player pertaining to the details
 		// that transpired during login
 		// so that it can be used elsewhere
-		final HostNameInfo info = HostNameCheckListener.matcher.match(event
-				.getHostname());
-		if (!info.isGoodHostName() || info.isByIP()) {
-			plugin.getLogger().info(
-					"weird login of player " + event.getPlayer().getName()
-							+ " via " + info.getHostDomainName());
+		final HostNameInfo hi = new HostNameInfo( event.getHostname() );
+		if ( !hi.getIsGoodHostName() || hi.getIsIpAddress() ) {
+			this.tellConsoleWeirdHost( event.getPlayer(), hi );
 		}
+		hi.attachToPlayer( event.getPlayer(), this.plugin );
 
-		event.getPlayer().setMetadata(HostNameCheckListener.metakey,
-				new FixedMetadataValue(plugin, info));
+	}
 
+	/**
+	 * Report via the console logger that a {@code player} is using a bad host
+	 * name {@code hostinfo}
+	 * 
+	 * @param player
+	 *          The player to report information about to the error log
+	 * @param hostinfo
+	 *          The data about a users host
+	 */
+	public void tellConsoleWeirdHost( final Player player, final HostNameInfo hostinfo ) {
+		this.plugin.getLogger().info( "weird login of player " + player.getName() + " via " + hostinfo.getHostName() );
 	}
 }
