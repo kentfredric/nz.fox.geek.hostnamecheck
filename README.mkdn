@@ -1,6 +1,6 @@
 ### Host Name Checker
 
-#### Version 0.1.0
+#### Version 0.3.0
 
 This is still a very limited plugin, that does only a few things,
      and it is very Noirland specific

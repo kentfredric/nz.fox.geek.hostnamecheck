@@ -10,6 +10,8 @@ import org.bukkit.plugin.Plugin;
 
 public final class HostNameCheckListener implements Listener {
 
+	public static int tick_delay = 100;
+
 	/**
 	 * Tell {@code player} that their host in {@code hostinfo} is bad
 	 * 
@@ -20,7 +22,7 @@ public final class HostNameCheckListener implements Listener {
 	 */
 	public static void tellPlayerBadHostName( final Player player, final HostNameInfo hostinfo ) {
 		player.sendMessage( "Warning: The server address you have connected to ( " + hostinfo.getDomainName()
-				+ " ) is not recommended, and maybe slower than necessary" );
+				+ " ) is not recommended, and may be slower than necessary" );
 		HostNameCheckListener.tellPlayerPickHost( player );
 	}
 
@@ -65,7 +67,7 @@ public final class HostNameCheckListener implements Listener {
 	 * @param event
 	 *          The Join event.
 	 */
-	@EventHandler( priority = EventPriority.LOWEST )
+	@EventHandler( priority = EventPriority.NORMAL )
 	public void onJoin( final PlayerJoinEvent event ) {
 		// This, fetches the data obtained during login
 		// and dispatches it on join,
@@ -82,15 +84,11 @@ public final class HostNameCheckListener implements Listener {
 			return;
 		}
 
-		final HostNameInfo hi = HostNameInfo.extractFromPlayer( p, this.plugin );
-
-		if ( hi.getIsBadHostName() ) {
-			HostNameCheckListener.tellPlayerBadHostName( p, hi );
-		}
-		if ( hi.getIsIpAddress() ) {
-			HostNameCheckListener.tellPlayerBadIP( p, hi );
-
-		}
+		this.plugin
+				.getServer()
+				.getScheduler()
+				.runTaskLater( this.plugin, new MessageAfterLogin( p, HostNameInfo.extractFromPlayer( p, this.plugin ) ),
+						HostNameCheckListener.tick_delay );
 	}
 
 	/**
